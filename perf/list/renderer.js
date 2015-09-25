@@ -44,12 +44,14 @@ function ListRenderer(container, lib) {
       elementOpen('div', item.key, itemStatics,
             'aria-selected', isSelected);
       
-        elementVoid('div', null, checkboxStatics,
+        elementOpen('div', null, checkboxStatics,
             'aria-checked', 'false');
+        elementClose('div');
 
-        elementVoid('div', null, starStatics,
+        elementOpen('div', null, starStatics,
             'data-starred', item.starred,
             'aria-label', item.starred ? 'Starred' : 'Not Starred');
+        elementClose('div');
         
         elementOpen('span', null, senderStatics,
             'title', item.sender);

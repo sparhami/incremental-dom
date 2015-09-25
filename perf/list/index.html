@@ -2,6 +2,7 @@
   <head>
     <link rel="stylesheet" href="css/style.css">
     <script src="../../dist/incremental-dom-min.js"></script>
+    <script src="../exploration.js"></script>
     <script src="../creation-js.js"></script>
     <script src="../creation-innerhtml.js"></script>
     <script src="../stats.js"></script>
@@ -42,6 +43,7 @@
         ];
 
         var IMPLS = [
+          { name: 'exploration', obj: Exploration },
           { name: 'IncrementalDOM', obj: IncrementalDOM },
           { name: 'creation-js', obj: CreationJs },
           { name: 'creation-innerHTML', obj: CreationInnerHtml }
