@@ -26,7 +26,8 @@
   function initializeData(node, nodeName, key) {
     if (nodeName === '#text') {
       node['__icData'] = node['__icData'] || {
-        nodeName: '#text'
+        nodeName: '#text',
+        value: ''
       };
     } else {
       node['__icData'] = node['__icData'] || {
@@ -46,6 +47,7 @@
     if (nodeName === data.nodeName && key == data.key) {
       matchingNode = currentNode;
     } else {
+
       var parentData = currentParent['__icData'];
       var keyMap = parentData.keyMap;
 
@@ -84,6 +86,7 @@
   }
 
   function enterElement() {
+    previousNode = null;
     currentParent = currentNode;
     currentNode = currentNode.firstChild;
   }
@@ -138,9 +141,10 @@
 
   function elementOpen(tagName, key, statics) {
     var node = alignWithDom(tagName, key, statics);
+    var data = node['__icData'];
     enterElement();
 
-    var attrsArr = node['__icData'].attrsArr;
+    var attrsArr = data.attrsArr;
     var attrsChanged = false;
     var i = 3;
     var j = 0;
@@ -163,7 +167,7 @@
 
     if (attrsChanged) {
       var attr;
-      var newAttrs = node['__icData'].newAttrs;
+      var newAttrs = data.newAttrs;
 
       for (attr in newAttrs) {
         newAttrs[attr] = undefined;
@@ -177,6 +181,7 @@
         applyAttr(node, attr, newAttrs[attr]);
       }
     }
+
   }
 
   function elementClose(tagName) {
@@ -191,10 +196,12 @@
  
   function text(value) {
     var node = alignWithDom('#text', null, null);
+    var data = node['__icData'];
     skipNode();
 
-    if (node.data !== value) {
+    if (data.value !== value) {
       node.data = value;
+      data.value = value;
     }
   }
 
