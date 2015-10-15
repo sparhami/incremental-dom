@@ -27,11 +27,16 @@
     if (nodeName === '#text') {
       node['__icData'] = node['__icData'] || {
         nodeName: '#text',
+        nextSibling: null,
         value: ''
       };
     } else {
       node['__icData'] = node['__icData'] || {
         nodeName: nodeName,
+        nextSibling: null,
+        parentNode: currentParent,
+        firstChild: null,
+        lastChild: null,
         key: key,
         keyMap: null,
         attrsArr: [],
@@ -69,7 +74,17 @@
       if (data.key) {
         currentParent.replaceChild(matchingNode, currentNode);
       } else {
-        currentParent.insertBefore(matchingNode, currentNode);
+        currentParent.insertBefore(matchingNode, currentNode);  
+      }
+
+      if (previousNode) {
+        previousNode['__icData'].nextSibling = matchingNode;
+      } else {
+        currentParent['__icData'].firstChild = matchingNode;
+      }
+
+      if (!currentNode) {
+        currentParent['__icData'].lastChild = matchingNode;
       }
     }
 
@@ -77,7 +92,7 @@
   }
 
   function clearUnvisitedDom() {
-    var lastChild = currentParent.lastChild || previousNode;
+    var lastChild = currentParent['__icData'].lastChild || previousNode;
 
     while(lastChild !== previousNode) {
       currentParent.removeChild(lastChild);
@@ -88,18 +103,18 @@
   function enterElement() {
     previousNode = null;
     currentParent = currentNode;
-    currentNode = currentNode.firstChild;
+    currentNode = currentNode['__icData'].firstChild;
   }
 
   function exitElement() {
     previousNode = currentParent;
-    currentNode = currentParent.nextSibling;
-    currentParent = currentParent.parentNode;
+    currentNode = currentParent['__icData'].nextSibling;
+    currentParent = currentParent['__icData'].parentNode;
   }
 
   function skipNode() {
     previousNode = currentNode;
-    currentNode = currentNode.nextSibling;
+    currentNode = currentNode['__icData'].nextSibling;
   }
 
 
