@@ -51,45 +51,39 @@
   function alignWithDom(nodeName, key, initializationData) {
     var data = (currentNode && currentNode['__icData']) || NO_DATA;
     var matchingNode;
+    var parentData = currentParent['__icData'];
+    var keyMap = parentData.keyMap;
 
-    if (nodeName === data.nodeName && key == data.key) {
-      matchingNode = currentNode;
+    if (keyMap) {
+      matchingNode = keyMap[key];
+    }
+
+    if (!matchingNode) {
+      if (nodeName === '#text') {
+        matchingNode = document.createTextNode('');
+        hooks.textCreated(matchingNode, initializationData);
+      } else {
+        matchingNode = document.createElement(nodeName);
+        hooks.elementCreated(matchingNode, initializationData);
+      }
+
+      initializeData(matchingNode, nodeName, key);
+    }
+
+    if (data.key) {
+      currentParent.replaceChild(matchingNode, currentNode);
     } else {
+      currentParent.insertBefore(matchingNode, currentNode);  
+    }
 
-      var parentData = currentParent['__icData'];
-      var keyMap = parentData.keyMap;
+    if (previousNode) {
+      previousNode['__icData'].nextSibling = matchingNode;
+    } else {
+      currentParent['__icData'].firstChild = matchingNode;
+    }
 
-      if (keyMap) {
-        matchingNode = keyMap[key];
-      }
-
-      if (!matchingNode) {
-        if (nodeName === '#text') {
-          matchingNode = document.createTextNode('');
-          hooks.textCreated(matchingNode, initializationData);
-        } else {
-          matchingNode = document.createElement(nodeName);
-          hooks.elementCreated(matchingNode, initializationData);
-        }
-
-        initializeData(matchingNode, nodeName, key);
-      }
-
-      if (data.key) {
-        currentParent.replaceChild(matchingNode, currentNode);
-      } else {
-        currentParent.insertBefore(matchingNode, currentNode);  
-      }
-
-      if (previousNode) {
-        previousNode['__icData'].nextSibling = matchingNode;
-      } else {
-        currentParent['__icData'].firstChild = matchingNode;
-      }
-
-      if (!currentNode) {
-        currentParent['__icData'].lastChild = matchingNode;
-      }
+    if (!currentNode) {
+      currentParent['__icData'].lastChild = matchingNode;
     }
 
     return currentNode = matchingNode;
@@ -121,9 +115,15 @@
     currentNode = currentNode['__icData'].nextSibling;
   }
 
+  function elementNeedsAlignment(tagName, key) {
+    return !currentNode ||
+        tagName !== currentNode['__icData'].nodeName ||
+        key !== currentNode['__icData'].key;
+  }
 
-
-
+  function textNeedsAlignment() {
+    return !currentNode || currentNode['__icData'].nodeName !== '#text';
+  }
 
 
 
@@ -170,8 +170,16 @@
   }
 
   function elementOpen(tagName, key, statics) {
-    var node = alignWithDom(tagName, key, statics);
-    var data = node['__incrementalDomData'];
+    var data = (currentNode && currentNode['__icData']) || NO_DATA;
+    var node;
+
+    if (elementNeedsAlignment(tagName, key)) {
+      node = alignWithDom(tagName, key, statics);
+    } else {
+      node = currentNode;
+    }
+
+    data = node['__incrementalDomData'];
     enterElement();
 
     var attrsArr = data.attrsArr;
@@ -225,8 +233,15 @@
   }
  
   function text(value) {
-    var node = alignWithDom('#text', null, null);
-    var data = node['__incrementalDomData'];
+    var node;
+
+    if (textNeedsAlignment()) {
+      node = alignWithDom('#text', null, null);
+    } else {
+      node = currentNode;
+    }
+
+    data = node['__incrementalDomData'];
     skipNode();
 
     if (data.value !== value) {
