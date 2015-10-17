@@ -4,9 +4,13 @@
   var previousNode;
 
   var NO_DATA = {
+    nodeName: '#invalid',
+    nextSibling: null,
+    parentNode: null,
+    firstChild: null,
+    lastChild: null,
     key: null,
-    keyMap: null,
-    nodeName: '#invalid'
+    keyMap: null
   };
 
   function patch(el, fn, data) {
