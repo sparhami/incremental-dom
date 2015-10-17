@@ -118,7 +118,7 @@
   function elementNeedsAlignment(tagName, key) {
     return !currentNode ||
         tagName !== currentNode['__icData'].nodeName ||
-        key !== currentNode['__icData'].key;
+        key != currentNode['__icData'].key;
   }
 
   function textNeedsAlignment() {
