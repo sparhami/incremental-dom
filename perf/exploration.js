@@ -20,15 +20,16 @@
   }
 
   var hooks = {
-    elementCreated: function(el, initializationData) {}
+    elementCreated: function(node, initializationData) {},
+
+    textCreated: function(node, initializationData) {}
   };
 
   function initializeData(node, nodeName, key) {
     if (nodeName === '#text') {
       node['__icData'] = node['__icData'] || {
         nodeName: '#text',
-        nextSibling: null,
-        value: ''
+        nextSibling: null
       };
     } else {
       node['__icData'] = node['__icData'] || {
@@ -38,9 +39,7 @@
         firstChild: null,
         lastChild: null,
         key: key,
-        keyMap: null,
-        attrsArr: [],
-        newAttrs: {}
+        keyMap: null
       };
     }
   }
@@ -63,6 +62,7 @@
       if (!matchingNode) {
         if (nodeName === '#text') {
           matchingNode = document.createTextNode('');
+          hooks.textCreated(matchingNode, initializationData);
         } else {
           matchingNode = document.createElement(nodeName);
           hooks.elementCreated(matchingNode, initializationData);
@@ -139,11 +139,22 @@
 
 
 
-  hooks.elementCreated = function(el, statics) {
+  hooks.elementCreated = function(node, statics) {
     var arr = statics || [];
     for (var i = 0; i < arr.length; i += 2) {
-      applyAttr(el, arr[i], arr[i + 1]);
+      applyAttr(node, arr[i], arr[i + 1]);
     }
+
+    node['__incrementalDomData'] = {
+      attrsArr: [],
+      newAttrs: {}
+    };
+  };
+
+  hooks.textCreated = function(node, statics) {
+    node['__incrementalDomData'] = {
+      value: ''
+    };
   };
 
   function applyAttr(el, name, value) {
@@ -156,7 +167,7 @@
 
   function elementOpen(tagName, key, statics) {
     var node = alignWithDom(tagName, key, statics);
-    var data = node['__icData'];
+    var data = node['__incrementalDomData'];
     enterElement();
 
     var attrsArr = data.attrsArr;
@@ -211,7 +222,7 @@
  
   function text(value) {
     var node = alignWithDom('#text', null, null);
-    var data = node['__icData'];
+    var data = node['__incrementalDomData'];
     skipNode();
 
     if (data.value !== value) {
