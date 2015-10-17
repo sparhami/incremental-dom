@@ -170,17 +170,12 @@
   }
 
   function elementOpen(tagName, key, statics) {
-    var data = (currentNode && currentNode['__icData']) || NO_DATA;
-    var node;
-
     if (elementNeedsAlignment(tagName, key)) {
-      node = alignWithDom(tagName, key, statics);
-    } else {
-      node = currentNode;
+      alignWithDom(tagName, key, statics);
     }
 
-    data = node['__incrementalDomData'];
-    enterElement();
+    var node = currentNode;
+    var data = node['__incrementalDomData'];
 
     var attrsArr = data.attrsArr;
     var attrsChanged = false;
@@ -220,6 +215,7 @@
       }
     }
 
+    enterElement();
   }
 
   function elementClose(tagName) {
@@ -233,21 +229,19 @@
   }
  
   function text(value) {
-    var node;
-
     if (textNeedsAlignment()) {
-      node = alignWithDom('#text', null, null);
-    } else {
-      node = currentNode;
+      alignWithDom('#text', null, null);
     }
 
-    data = node['__incrementalDomData'];
-    skipNode();
+    var node = currentNode;
+    var data = node['__incrementalDomData'];
 
     if (data.value !== value) {
       node.data = value;
       data.value = value;
     }
+
+    skipNode();
   }
 
   scope.Exploration = {
