@@ -125,6 +125,28 @@
     return !currentNode || currentNode['__icData'].nodeName !== '#text';
   }
 
+  function coreText() {
+    if (textNeedsAlignment()) {
+      alignWithDom('#text', null, null);
+    }
+    var node = currentNode;
+    skipNode();
+    return node;
+  }
+
+  function coreElementOpen(tagName, key, statics) {
+    if (elementNeedsAlignment(tagName, key)) {
+      alignWithDom(tagName, key, statics);
+    }
+    var node = currentNode;
+    enterElement();
+    return node;
+  }
+
+  function coreElementClose() {
+    clearUnvisitedDom();
+    exitElement();
+  }
 
 
 
@@ -170,11 +192,7 @@
   }
 
   function elementOpen(tagName, key, statics) {
-    if (elementNeedsAlignment(tagName, key)) {
-      alignWithDom(tagName, key, statics);
-    }
-
-    var node = currentNode;
+    var node = coreElementOpen(tagName, key, statics);
     var data = node['__incrementalDomData'];
 
     var attrsArr = data.attrsArr;
@@ -214,13 +232,10 @@
         applyAttr(node, attr, newAttrs[attr]);
       }
     }
-
-    enterElement();
   }
 
   function elementClose(tagName) {
-    clearUnvisitedDom();
-    exitElement();
+    coreElementClose();
   }
 
   function elementVoid(tagName, key, statics) {
@@ -229,19 +244,13 @@
   }
  
   function text(value) {
-    if (textNeedsAlignment()) {
-      alignWithDom('#text', null, null);
-    }
-
-    var node = currentNode;
+    var node = coreText();
     var data = node['__incrementalDomData'];
 
     if (data.value !== value) {
       node.data = value;
       data.value = value;
     }
-
-    skipNode();
   }
 
   scope.Exploration = {
