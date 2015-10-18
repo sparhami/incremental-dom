@@ -49,10 +49,8 @@
   }
 
   function alignWithDom(nodeName, key, initializationData) {
-    var data = (currentNode && currentNode['__icData']) || NO_DATA;
+    var keyMap = currentParent['__icData'].keyMap;
     var matchingNode;
-    var parentData = currentParent['__icData'];
-    var keyMap = parentData.keyMap;
 
     if (keyMap) {
       matchingNode = keyMap[key];
@@ -70,7 +68,7 @@
       initializeData(matchingNode, nodeName, key);
     }
 
-    if (data.key) {
+    if (currentNode && currentNode['__icData'].key) {
       currentParent.replaceChild(matchingNode, currentNode);
     } else {
       currentParent.insertBefore(matchingNode, currentNode);  
@@ -86,7 +84,7 @@
       currentParent['__icData'].lastChild = matchingNode;
     }
 
-    return currentNode = matchingNode;
+    currentNode = matchingNode;
   }
 
   function clearUnvisitedDom() {
