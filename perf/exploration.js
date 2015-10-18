@@ -3,17 +3,12 @@
   var currentNode;
   var previousNode;
 
-  var NO_DATA = {
-    nodeName: '#invalid',
-    nextSibling: null,
-    parentNode: null,
-    firstChild: null,
-    lastChild: null,
-    key: null,
-    keyMap: null
-  };
-
   function patch(el, fn, data) {
+    // Save the existing state to restore
+    var savedCurrentParent = currentParent;
+    var savedCurrentNode = currentNode;
+    var savedPreviousNode = previousNode;
+
     currentParent = el;
     currentNode = el.firstChild;
     previousNode = null;
@@ -21,6 +16,11 @@
 
     fn(data);
     clearUnvisitedDom();
+
+    // restore the previous state
+    currentParent = savedCurrentParent;
+    currentNode = savedCurrentNode;
+    previousNode = savedPreviousNode;
   }
 
   var hooks = {
@@ -30,22 +30,15 @@
   };
 
   function initializeData(node, nodeName, key) {
-    if (nodeName === '#text') {
-      node['__icData'] = node['__icData'] || {
-        nodeName: '#text',
-        nextSibling: null
-      };
-    } else {
-      node['__icData'] = node['__icData'] || {
-        nodeName: nodeName,
-        nextSibling: null,
-        parentNode: currentParent,
-        firstChild: null,
-        lastChild: null,
-        key: key,
-        keyMap: null
-      };
-    }
+    node['__icData'] = node['__icData'] || {
+      nodeName: nodeName,
+      nextSibling: null,
+      parentNode: currentParent,
+      firstChild: null,
+      lastChild: null,
+      key: key,
+      keyMap: null
+    };
   }
 
   function alignWithDom(nodeName, key, initializationData) {
@@ -127,18 +120,18 @@
     if (textNeedsAlignment()) {
       alignWithDom('#text', null, null);
     }
-    var node = currentNode;
+
     skipNode();
-    return node;
+    return previousNode;
   }
 
   function coreElementOpen(tagName, key, statics) {
     if (elementNeedsAlignment(tagName, key)) {
       alignWithDom(tagName, key, statics);
     }
-    var node = currentNode;
+
     enterElement();
-    return node;
+    return currentParent;
   }
 
   function coreElementClose() {
