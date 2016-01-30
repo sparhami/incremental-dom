@@ -203,6 +203,8 @@ const matches = function(matchNode, nameOrCtor, key, typeId) {
  * @param {?string=} key The key used to identify the Node..
  * @param {*=} typeId An type identifier that avoids reuse between elements that
  *     would otherwise match.
+ * @param {string} nodeName For an Element, this should be a valid tag string.
+ *     For a Text, this should be #text.
  */
 const alignWithDOM = function(nameOrCtor, key, typeId) {
   if (currentNode && matches(currentNode, nameOrCtor, key, typeId)) {
