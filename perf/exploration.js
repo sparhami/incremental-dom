@@ -1,17 +1,14 @@
 (function(scope) {
   var currentParent;
   var currentNode;
-  var previousNode;
 
   function patch(el, fn, data) {
     // Save the existing state to restore
     var savedCurrentParent = currentParent;
     var savedCurrentNode = currentNode;
-    var savedPreviousNode = previousNode;
 
     currentParent = el;
-    currentNode = el.firstChild;
-    previousNode = null;
+    currentNode = null;
     initializeData(el);
 
     fn(data);
@@ -20,7 +17,6 @@
     // restore the previous state
     currentParent = savedCurrentParent;
     currentNode = savedCurrentNode;
-    previousNode = savedPreviousNode;
   }
 
   var hooks = {
@@ -32,10 +28,6 @@
   function initializeData(node, nodeName, key) {
     node['__icData'] = node['__icData'] || {
       nodeName: nodeName,
-      nextSibling: null,
-      parentNode: currentParent,
-      firstChild: null,
-      lastChild: null,
       key: key,
       keyMap: null
     };
@@ -67,43 +59,34 @@
       currentParent.insertBefore(matchingNode, currentNode);  
     }
 
-    if (previousNode) {
-      previousNode['__icData'].nextSibling = matchingNode;
-    } else {
-      currentParent['__icData'].firstChild = matchingNode;
-    }
-
-    if (!currentNode) {
-      currentParent['__icData'].lastChild = matchingNode;
-    }
-
     currentNode = matchingNode;
   }
 
   function clearUnvisitedDom() {
-    var lastChild = currentParent['__icData'].lastChild || previousNode;
+    var lastChild = currentParent.lastChild;
 
-    while(lastChild !== previousNode) {
+    while(lastChild !== currentNode) {
       currentParent.removeChild(lastChild);
       lastChild = currentParent.lastChild;
     }
   }
 
   function enterElement() {
-    previousNode = null;
     currentParent = currentNode;
-    currentNode = currentNode['__icData'].firstChild;
+    currentNode = null;
   }
 
   function exitElement() {
-    previousNode = currentParent;
-    currentNode = currentParent['__icData'].nextSibling;
-    currentParent = currentParent['__icData'].parentNode;
+    currentNode = currentParent;
+    currentParent = currentParent.parentNode;
   }
 
-  function skipNode() {
-    previousNode = currentNode;
-    currentNode = currentNode['__icData'].nextSibling;
+  function nextNode() {
+    if (currentNode) {
+      currentNode = currentNode.nextSibling;
+    } else {
+      currentNode = currentParent.firstChild;
+    }
   }
 
   function elementNeedsAlignment(tagName, key) {
@@ -117,15 +100,16 @@
   }
 
   function coreText() {
+    nextNode();
     if (textNeedsAlignment()) {
       alignWithDom('#text', null, null);
     }
 
-    skipNode();
-    return previousNode;
+    return currentNode;
   }
 
   function coreElementOpen(tagName, key, statics) {
+    nextNode();
     if (elementNeedsAlignment(tagName, key)) {
       alignWithDom(tagName, key, statics);
     }
