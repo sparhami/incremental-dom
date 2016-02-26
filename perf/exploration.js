@@ -2,7 +2,7 @@
   var currentParent;
   var currentNode;
 
-  function patch(el, fn, data) {
+  function corePatch(el, fn, data) {
     // Save the existing state to restore
     var savedCurrentParent = currentParent;
     var savedCurrentNode = currentNode;
@@ -19,47 +19,32 @@
     currentNode = savedCurrentNode;
   }
 
-  var hooks = {
-    elementCreated: function(node, initializationData) {},
-
-    textCreated: function(node, initializationData) {}
-  };
-
   function initializeData(node, nodeName, key) {
     node['__icData'] = node['__icData'] || {
       nodeName: nodeName,
       key: key,
-      keyMap: null
+      keyMap: null,
+      parent: null,
+      anchor: null,
     };
   }
 
-  function alignWithDom(nodeName, key, initializationData) {
-    var keyMap = currentParent['__icData'].keyMap;
-    var matchingNode;
+  function attachIfNeeded(node) {
+    const parent = node['__icData'].parent;
+    const anchor = node['__icData'].anchor;
 
-    if (keyMap) {
-      matchingNode = keyMap[key];
+    if (!parent) {
+      return;
     }
 
-    if (!matchingNode) {
-      if (nodeName === '#text') {
-        matchingNode = document.createTextNode('');
-        hooks.textCreated(matchingNode, initializationData);
-      } else {
-        matchingNode = document.createElement(nodeName);
-        hooks.elementCreated(matchingNode, initializationData);
-      }
+    node['__icData'].parent = null;
+    node['__icData'].anchor = null;
 
-      initializeData(matchingNode, nodeName, key);
-    }
-
-    if (currentNode && currentNode['__icData'].key) {
-      currentParent.replaceChild(matchingNode, currentNode);
+    if (anchor && anchor['__icData'].key) {
+      parent.replaceChild(node, anchor);
     } else {
-      currentParent.insertBefore(matchingNode, currentNode);  
+      parent.insertBefore(node, anchor);
     }
-
-    currentNode = matchingNode;
   }
 
   function clearUnvisitedDom() {
@@ -99,19 +84,42 @@
     return !currentNode || currentNode['__icData'].nodeName !== '#text';
   }
 
-  function coreText() {
+  function coreText(textCreated) {
     nextNode();
+
     if (textNeedsAlignment()) {
-      alignWithDom('#text', null, null);
+      var matchingNode = document.createTextNode('');
+
+      textCreated(matchingNode);
+      initializeData(matchingNode, '#text', null);
+
+      currentParent.insertBefore(matchingNode, currentNode);
+      currentNode = matchingNode;
     }
 
     return currentNode;
   }
 
-  function coreElementOpen(tagName, key, statics) {
+  function coreElementOpen(tagName, key, elementCreated, statics) {
     nextNode();
+
     if (elementNeedsAlignment(tagName, key)) {
-      alignWithDom(tagName, key, statics);
+      var keyMap = currentParent['__icData'].keyMap;
+      var matchingNode;
+
+      if (keyMap && key) {
+        matchingNode = keyMap[key];
+      }
+
+      if (!matchingNode) {
+        matchingNode = document.createElement(tagName);
+        elementCreated(matchingNode, statics);
+        initializeData(matchingNode, tagName, key);
+      }
+
+      matchingNode['__icData'].parent = currentParent;
+      matchingNode['__icData'].anchor = currentNode;
+      currentNode = matchingNode;
     }
 
     enterElement();
@@ -119,6 +127,8 @@
   }
 
   function coreElementClose() {
+    attachIfNeeded(currentParent);
+
     clearUnvisitedDom();
     exitElement();
   }
@@ -140,10 +150,54 @@
 
 
 
-  hooks.elementCreated = function(node, statics) {
+  var attrOps = [];
+  var textOps = [];
+
+  function bufferAttr(el, name, value) {
+    attrOps.push(el);
+    attrOps.push(name);
+    attrOps.push(value);
+  }
+
+  function bufferText(node, value) {
+    textOps.push(node);
+    textOps.push(value);
+  }
+
+  function flushAttr(el, name, value) {
+    if (value !== undefined) {
+      el.setAttribute(name, value);
+    } else {
+      el.removeAttribute(name);
+    }
+  }
+
+  function flushText(node, value) {
+    node.data = value;
+  }
+
+  function flush() {
+    for (var i = 0; i < attrOps.length; i += 3) {
+      flushAttr(attrOps[i+0], attrOps[i+1], attrOps[i+2]);
+    }
+
+    for (var i = 0; i < textOps.length; i += 2) {
+      flushText(textOps[i+0], textOps[i+1]);
+    }
+
+    attrOps.length = 0;
+    textOps.length = 0;
+  }
+
+  function patch(el, fn, data) {
+    corePatch(el, fn, data);
+    flush();
+  }
+
+  var elementCreated = function(node, statics) {
     var arr = statics || [];
     for (var i = 0; i < arr.length; i += 2) {
-      applyAttr(node, arr[i], arr[i + 1]);
+      bufferAttr(node, arr[i], arr[i + 1]);
     }
 
     node['__incrementalDomData'] = {
@@ -152,22 +206,14 @@
     };
   };
 
-  hooks.textCreated = function(node, statics) {
+  var textCreated = function(node, statics) {
     node['__incrementalDomData'] = {
       value: ''
     };
   };
 
-  function applyAttr(el, name, value) {
-    if (value !== undefined) {
-      el.setAttribute(name, value);
-    } else {
-      el.removeAttribute(name);
-    }
-  }
-
   function elementOpen(tagName, key, statics) {
-    var node = coreElementOpen(tagName, key, statics);
+    var node = coreElementOpen(tagName, key, elementCreated, statics);
     var data = node['__incrementalDomData'];
 
     var attrsArr = data.attrsArr;
@@ -204,7 +250,7 @@
       }
 
       for (attr in newAttrs) {
-        applyAttr(node, attr, newAttrs[attr]);
+        bufferAttr(node, attr, newAttrs[attr]);
       }
     }
   }
@@ -219,18 +265,19 @@
   }
  
   function text(value) {
-    var node = coreText();
+    var node = coreText(textCreated);
     var data = node['__incrementalDomData'];
 
     if (data.value !== value) {
+      data.value = value;
+
       var formatted = value;
       for (var i = 1; i < arguments.length; i += 1) {
         var formatter = arguments[i];
         formatted = formatter(formatted);
       }
 
-      node.data = formatted;
-      data.value = value;
+      bufferText(node, formatted);
     }
   }
 
