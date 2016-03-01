@@ -3,7 +3,7 @@
 }
 
 .item-name {
-  width: 100px;
+  width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
