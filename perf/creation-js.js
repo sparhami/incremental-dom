@@ -65,6 +65,7 @@
     el.innerHTML = '';
     parentStack.push(el);
     fn(data);
+    parentStack.length = 0;
 
     flush();
   }
