@@ -13,6 +13,7 @@
     <script src="selection.js"></script>
     <script src="selection-raf.js"></script>
     <script src="renderer.js"></script>
+    <script src="vanilla-renderer.js"></script>
 
     <style>
       #container [aria-selected="true"] {
@@ -43,10 +44,26 @@
         ];
 
         var IMPLS = [
-          { name: 'exploration', obj: Exploration },
-          { name: 'IncrementalDOM', obj: IncrementalDOM },
-          { name: 'creation-js', obj: CreationJs },
-          { name: 'creation-innerHTML', obj: CreationInnerHtml }
+          {
+            name: 'exploration',
+            renderer: new ListRenderer(testContainer, Exploration)
+          },
+          {
+            name: 'IncrementalDOM',
+            renderer: new ListRenderer(testContainer, IncrementalDOM)
+          },
+          {
+            name: 'creation-js',
+            renderer: new ListRenderer(testContainer, CreationJs)
+          },
+          {
+            name: 'creation-innerHTML',
+            renderer: new ListRenderer(testContainer, CreationInnerHtml)
+          },
+          {
+            name: 'vanilla',
+            renderer: new VanillaListRenderer(testContainer)
+          }
         ];
 
         var currentTest;
@@ -62,7 +79,6 @@
         function setTestAndImpl(test, impl) {
           currentTest = test;
           currentImpl = impl;
-          currentRenderer = new ListRenderer(testContainer, impl.obj);
 
           running = true;
           update(); 
@@ -115,7 +131,7 @@
       
         function run() {
           delay(100)
-            .then(function() { return currentTest.fn.run(currentRenderer) })
+            .then(function() { return currentTest.fn.run(currentImpl.renderer) })
             .then(function(samples) { return Stats.avg(Stats.filterOutliers(samples)) })
             .then(function(avg) {
               results = `time per iteration: ${avg.toFixed(3)}ms`;
