@@ -221,7 +221,7 @@
     var i = 3;
     var j = 0;
 
-    for (; i < arguments.length; i += 1, j += 1) {
+    for (; i < arguments.length && j < attrsArr.length; i += 1, j += 1) {
       if (attrsArr[j] !== arguments[i]) {
         attrsChanged = true;
         break;
