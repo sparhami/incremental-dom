@@ -1,6 +1,6 @@
 (function(scope) {
   var ITEM_COUNT = 200;
-  var ITERATION_COUNT = 400;
+  var ITERATION_COUNT = 2000;
   var items = ListSetup.createItems(ITEM_COUNT);
 
 
