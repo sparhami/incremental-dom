@@ -213,12 +213,16 @@
   };
 
   function elementOpen(tagName, key, statics) {
-    var node = coreElementOpen(tagName, key, elementCreated, statics);
+    coreElementOpen(tagName, key, elementCreated, statics);
+  }
+
+  function updateAttributes() {
+    var node = currentParent;
     var data = node['__incrementalDomData'];
 
     var attrsArr = data.attrsArr;
     var attrsChanged = false;
-    var i = 3;
+    var i = 0;
     var j = 0;
 
     for (; i < arguments.length && j < attrsArr.length; i += 1, j += 1) {
@@ -245,7 +249,7 @@
         newAttrs[attr] = undefined;
       }
 
-      for (i = 3; i < arguments.length; i += 2) {
+      for (i = 0; i < arguments.length; i += 2) {
         newAttrs[arguments[i]] = arguments[i + 1];
       }
 
@@ -286,6 +290,7 @@
     elementOpen: elementOpen,
     elementClose: elementClose,
     elementVoid: elementVoid,
-    text: text
+    text: text,
+    updateAttributes: updateAttributes
   };
 })(window);

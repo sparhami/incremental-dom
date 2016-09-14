@@ -29,7 +29,8 @@ function ListRenderer(container, lib) {
       elementVoid = lib.elementVoid,
       elementOpen = lib.elementOpen,
       elementClose = lib.elementClose,
-      text = lib.text;
+      text = lib.text,
+      ua = lib.updateAttributes;
 
   function render(props) {
     var items = props.items;
@@ -41,29 +42,30 @@ function ListRenderer(container, lib) {
       var item = items[i];
       var isSelected = selectedKeys[item.key];
 
-      elementOpen('div', item.key, itemStatics,
-            'aria-selected', isSelected);
+      elementOpen('div', item.key, itemStatics);
+            ua('aria-selected', isSelected);
       
-        elementOpen('div', null, checkboxStatics,
-            'aria-checked', 'false');
+        elementOpen('div', null, checkboxStatics);
+            ua('aria-checked', 'false');
         elementClose('div');
 
-        elementOpen('div', null, starStatics,
-            'data-starred', item.starred,
-            'aria-label', item.starred ? 'Starred' : 'Not Starred');
+        elementOpen('div', null, starStatics);
+            ua('data-starred', item.starred,
+               'aria-label', item.starred ? 'Starred' : 'Not Starred');
         elementClose('div');
         
-        elementOpen('span', null, senderStatics,
-            'title', item.sender);
+        elementOpen('span', null, senderStatics);
+            ua('title', item.sender);
           text(item.sender);
         elementClose('span');
 
-        elementOpen('span', null, subjectStatics,
-            'title', item.subject);
+        elementOpen('span', null, subjectStatics);
+            ua('title', item.subject);
           text(item.subject);
         elementClose('span');
 
         elementOpen('span');
+            ua();
           text(item.date);
         elementClose('span');
 

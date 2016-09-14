@@ -34,7 +34,8 @@ function MutationRenderer(container, lib) {
       elementVoid = lib.elementVoid,
       elementOpen = lib.elementOpen,
       elementClose = lib.elementClose,
-      text = lib.text;
+      text = lib.text,
+      ua = lib.updateAttributes;
 
   function render(props) {
     var items = props.items;
@@ -47,17 +48,20 @@ function MutationRenderer(container, lib) {
       var delta = item.value * item.change;
 
       elementOpen('tr', item.key, itemStatics);
+          ua();
         elementOpen('td', null, nameStatics);
-          elementOpen('a', null, null,
-              'href', item.name);
+            ua();
+          elementOpen('a');
+              ua('href', item.name);
             text(item.name);
           elementClose('a');
         elementClose('td');
         elementOpen('td', null, valueStatics);
+            ua();
           text(item.value, toFixedTwo);
         elementClose('td');
-        elementOpen('td', null, changeStatics,
-            'data-positive', item.change >= 0);
+        elementOpen('td', null, changeStatics);
+            ua('data-positive', item.change >= 0);
           text(delta, toFixedTwo);
           text(item.change, toPercent, toFixedTwo, wrapChange)
         elementClose('td');
