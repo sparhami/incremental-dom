@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import {assertInPatch, assertNoChildrenDeclaredYet, assertNotInAttributes, assertNoUnclosedTags, assertPatchElementNoExtras, assertPatchOuterHasParentNode, assertVirtualAttributesClosed, setInAttributes, setInSkip, updatePatchContext} from './assertions';
+import {assertInPatch, assertNoChildrenDeclaredYet, assertNotInAttributes, assertNoUnclosedTags, assertPatchElementNoExtras, assertPatchOuterHasParentNode, assertVirtualAttributesClosed, setInAttributes, setInPatch, setInSkip} from './assertions';
 import {Context} from './context';
 import {getFocusedPath, moveBefore} from './dom_util';
 import {DEBUG} from './global';
@@ -100,7 +100,7 @@ function createPatcher<T, R>(
     if (DEBUG) {
       previousInAttributes = setInAttributes(false);
       previousInSkip = setInSkip(false);
-      updatePatchContext(context);
+      setInPatch(true);
     }
 
     try {
@@ -127,7 +127,7 @@ function createPatcher<T, R>(
       if (DEBUG) {
         setInAttributes(previousInAttributes);
         setInSkip(previousInSkip);
-        updatePatchContext(context);
+        setInPatch(!!context);
       }
     }
   };

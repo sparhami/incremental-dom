@@ -188,14 +188,6 @@ function assertPatchElementNoExtras(
 
 
 /**
- * @param newContext The current patch context.
- */
-function updatePatchContext(newContext: {}|null) {
-  inPatch = newContext != null;
-}
-
-
-/**
  * Updates the state of being in an attribute declaration.
  * @return the previous value.
  */
@@ -203,6 +195,14 @@ function setInAttributes(value: boolean) {
   const previous = inAttributes;
   inAttributes = value;
   return previous;
+}
+
+
+/**
+ * @param value Whether or not we are in a patch.
+ */
+function setInPatch(value: boolean) {
+  inPatch = value;
 }
 
 
@@ -241,6 +241,6 @@ export {
   assertPatchElementNoExtras,
   assertPatchOuterHasParentNode,
   setInAttributes,
+  setInPatch,
   setInSkip,
-  updatePatchContext,
 };
